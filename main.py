@@ -10,7 +10,7 @@ class Game:
         self.display = pg.display.set_mode((640,640))
         self.clock = pg.time.Clock()
         self.running = False 
-        self.framerate = 60
+        self.framerate = 5
 
     def setup_game(self):
 
@@ -21,7 +21,7 @@ class Game:
 
         self.cpu.load_rom('roms/BLITZ')
         self.cpu.load_sprites_in_memory()
-        print(self.cpu.memory)
+        # print(self.cpu.memory)
 
     
        
@@ -38,6 +38,7 @@ class Game:
 
             self.renderer.render()
 
+            self.cpu.cycle()
 
             for event in pg.event.get():
 

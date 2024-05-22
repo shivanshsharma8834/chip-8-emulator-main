@@ -19,7 +19,7 @@ class CPU:
         self.delayTimer = 0 
         self.soundTimer = 0 
 
-        self.pc = hex(0x200)
+        self.pc = 512
 
         self.stack = list()
 
@@ -50,7 +50,7 @@ class CPU:
 
         for i in range(0, len(sprites)):
 
-            self.memory[i] = sprites[i]
+            self.memory[i] = int(sprites[i])
 
 
     
@@ -62,13 +62,13 @@ class CPU:
 
             program = []
 
-            for i in range(0, len(rom_data),4):
+            for i in range(0, len(rom_data),2):
                  
-                program.append(rom_data[i:i + 4])
+                program.append(rom_data[i:i + 2])
                            
         for location in range(0, len(program)):
 
-            self.memory[512 + location] = program[location]
+            self.memory[512 + location] = int(binascii.hexlify(program[location]), 16)
             
     
     def cycle(self):
@@ -77,7 +77,7 @@ class CPU:
 
             if not(self.paused):
 
-                opcode = self.memory[self.pc] + self.memory[self.pc + 1]
+                opcode = (hex(self.memory[self.pc])[2:], hex(self.memory[self.pc + 1])[2:])
 
                 self.execute_instruction(opcode)
 
@@ -89,7 +89,7 @@ class CPU:
 
         self.pc += 2 
 
-        x = (opcode & 0x0f00) 
+        print(opcode)
 
            
                  
