@@ -7,21 +7,23 @@ class Game:
 
     def __init__(self) -> None:
 
-        self.display = pg.display.set_mode((640,640))
+        self.display = pg.display.set_mode((800,600))
         self.clock = pg.time.Clock()
         self.running = False 
-        self.framerate = 60
+        self.framerate = 5
 
     def setup_game(self):
 
-        self.renderer = Renderer(self, 20)
-        self.renderer.test_render()
+        self.renderer = Renderer(self, 5)
+        # self.renderer.test_render()
 
         self.cpu = CPU(self,self.renderer)
 
-        self.cpu.load_rom('roms/BLITZ')
+        self.cpu.load_rom('roms/IBM')
         self.cpu.load_sprites_in_memory()
+        # print(list(map(lambda x: int(x, base=16), self.cpu.memory)))
         print(self.cpu.memory)
+        print(self.cpu.memory[552])
 
     
        
@@ -38,6 +40,7 @@ class Game:
 
             self.renderer.render()
 
+            self.cpu.cycle()
 
             for event in pg.event.get():
 

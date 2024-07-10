@@ -1,9 +1,13 @@
-a = 0x1 
-b = 0x2 
-c = a | b 
+a = 0x00 
+b = 0xE0
 
-print(a)
+c = a << 8 | b 
 
-with open('roms/BLITZ', 'rb') as f:
+d = 0xe0a2
 
-    print(f.read())
+if (d & 0xF000 == 0x0000):
+
+    if d == 0x00E0:
+
+        print('Clear')
+

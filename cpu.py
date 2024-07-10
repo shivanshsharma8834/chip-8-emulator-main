@@ -19,13 +19,13 @@ class CPU:
         self.delayTimer = 0 
         self.soundTimer = 0 
 
-        self.pc = hex(0x200)
+        self.pc = int(hex(0x200), base=16)
 
         self.stack = list()
 
         self.paused = False 
 
-        self.speed = 10 
+        self.speed = 1
 
     def load_sprites_in_memory(self):
 
@@ -50,7 +50,7 @@ class CPU:
 
         for i in range(0, len(sprites)):
 
-            self.memory[i] = sprites[i]
+            self.memory[i] = int(sprites[i].hex(), base=16)
 
 
     
@@ -62,22 +62,25 @@ class CPU:
 
             program = []
 
-            for i in range(0, len(rom_data),4):
+            for i in range(0, len(rom_data)):
                  
-                program.append(rom_data[i:i + 4])
+                program.append(int(rom_data[i: i + 1].hex(), base=16))
                            
         for location in range(0, len(program)):
 
-            self.memory[512 + location] = program[location]
+            self.memory[int(hex(0x200), base=16) + location] = program[location]
             
     
-    def cycle(self):
+    def cycle(self): 
 
         for i in range(self.speed):
 
             if not(self.paused):
 
-                opcode = self.memory[self.pc] + self.memory[self.pc + 1]
+
+                
+                opcode = (self.memory[self.pc] << 8) | self.memory[self.pc + 1] # Opcode is made by attaching two instructions together.
+            
 
                 self.execute_instruction(opcode)
 
@@ -85,11 +88,57 @@ class CPU:
         self.renderer.render()
 
 
-    def execute_instruction(self,opcode):
+    def execute_instruction(self,opcode): 
 
-        self.pc += 2 
+        self.pc += 2
+        print(f'Program counter {self.pc}')
+        print(f'Current memory = {self.memory[self.pc]}')
 
-        x = (opcode & 0x0f00) 
+        X = (opcode & 0x0f00) >> 8
+        Y = (opcode & 0x00f0) >> 4
+        N = (opcode & 0x000f) 
+        NN = (opcode & 0x00ff)
+        NNN = (opcode & 0x0fff)
+
+        print(f'Opcode is {opcode}')
+        print(f'Hex opcode is {hex(opcode)}')
+        print(f'X: {hex(X)}, Y: {hex(Y)}, N: {hex(N)}, NN: {hex(NN)}, NNN: {hex(NNN)}')
+
+        if (opcode == 0x00e0): # Clear screen 
+            print('Clear screen 00E0')
+            self.renderer.clear()
+
+        if (opcode & 0xf000 == 0x1000) : # Jump to address NNN 
+            print(f'Jump to address {NNN} 1NNN')
+            # self.pc = opcode & 0x0FFF
+            self.pc = NNN 
+
+
+        if (opcode & 0xf000 == 0x6000) :
+            print(f'Set register V{X} to {NN} 6XNN')
+            self.v[X] = NN
+        
+        if (opcode & 0xf000 == 0x7000) :
+            print(f'Add register V{X} the value {NN} 7XNN')
+            self.v[X] += NN
+        
+        if (opcode & 0xf000 == 0xa000) :
+            print(f'Set index register to {NNN} ANNN')
+            self.i = NNN
+
+        if (opcode & 0xf000 == 0xd000) :
+            print(f'Draw to coordinates {self.v[X]} and {self.v[Y]} the value {N} DXYN')
+            self.renderer.setPixel(self.v[X],self.v[Y])
+
+
+
+            
+
+
+
+        
+            
+
 
            
                  
