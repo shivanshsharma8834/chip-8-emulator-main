@@ -1,0 +1,8 @@
+# Compiled Python Bytecode 
+*.pyc 
+__pycache__/
+
+# IntelliJ Pycharm files 
+.idea/
+
+
