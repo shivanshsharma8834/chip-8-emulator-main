@@ -81,16 +81,18 @@ class CPU:
                 
                 opcode = (self.memory[self.pc] << 8) | self.memory[self.pc + 1] # Opcode is made by attaching two instructions together.
             
+                self.pc += 2
 
                 self.execute_instruction(opcode)
 
+                
 
         self.renderer.render()
 
 
     def execute_instruction(self,opcode): 
 
-        self.pc += 2
+        
         print(f'Program counter {self.pc}')
         print(f'Current memory = {self.memory[self.pc]}')
 
