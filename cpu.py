@@ -77,13 +77,15 @@ class CPU:
 
             if not(self.paused):
 
+                print(f'Program counter {self.pc}')
+                print(f'Current memory = {self.memory[self.pc]}')
 
                 
                 opcode = (self.memory[self.pc] << 8) | self.memory[self.pc + 1] # Opcode is made by attaching two instructions together.
-            
-                self.pc += 2
+                
 
                 self.execute_instruction(opcode)
+                
 
                 
 
@@ -92,10 +94,12 @@ class CPU:
 
     def execute_instruction(self,opcode): 
 
+        self.pc += 2
         
-        print(f'Program counter {self.pc}')
-        print(f'Current memory = {self.memory[self.pc]}')
+        
+        
 
+        F = (opcode & 0xf000) >> 12
         X = (opcode & 0x0f00) >> 8
         Y = (opcode & 0x00f0) >> 4
         N = (opcode & 0x000f) 
@@ -106,31 +110,57 @@ class CPU:
         print(f'Hex opcode is {hex(opcode)}')
         print(f'X: {hex(X)}, Y: {hex(Y)}, N: {hex(N)}, NN: {hex(NN)}, NNN: {hex(NNN)}')
 
-        if (opcode == 0x00e0): # Clear screen 
+        if (F == 0x0): # Clear screen
+             
             print('Clear screen 00E0')
             self.renderer.clear()
+            return
 
-        if (opcode & 0xf000 == 0x1000) : # Jump to address NNN 
+        if (F == 0x1) : # Jump to address NNN 
             print(f'Jump to address {NNN} 1NNN')
-            # self.pc = opcode & 0x0FFF
             self.pc = NNN 
+            return
 
 
-        if (opcode & 0xf000 == 0x6000) :
+        if (F == 0x6) :
             print(f'Set register V{X} to {NN} 6XNN')
             self.v[X] = NN
+            return
         
-        if (opcode & 0xf000 == 0x7000) :
+        if (F == 0x7) :
             print(f'Add register V{X} the value {NN} 7XNN')
             self.v[X] += NN
+            return
         
-        if (opcode & 0xf000 == 0xa000) :
+        if (F == 0xa) :
             print(f'Set index register to {NNN} ANNN')
             self.i = NNN
+            return
 
-        if (opcode & 0xf000 == 0xd000) :
+        if (F == 0xd) :
             print(f'Draw to coordinates {self.v[X]} and {self.v[Y]} the value {N} DXYN')
-            self.renderer.setPixel(self.v[X],self.v[Y])
+            # self.renderer.setPixel(self.v[X],self.v[Y])
+            width = 8 
+            height = (opcode & 0xf)
+
+            self.v[0xf] = 0
+
+            for row in range(0, height):
+                sprite = self.memory[self.i + row]
+
+                for col in range(0,width):
+
+                    if ((sprite & 0x80) > 0):
+
+                        if ((self.renderer.setPixel(self.v[X] + col, self.v[Y] + row))):
+                            self.v[0xf] = 1
+
+                    sprite <<= 1
+            return
+        else:
+            print(f'Instruction not handled yet')
+            return
+
 
 
 
