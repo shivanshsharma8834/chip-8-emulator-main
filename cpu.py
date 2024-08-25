@@ -96,9 +96,6 @@ class CPU:
 
         self.pc += 2
         
-        
-        
-
         F = (opcode & 0xf000) >> 12
         X = (opcode & 0x0f00) >> 8
         Y = (opcode & 0x00f0) >> 4
@@ -112,17 +109,51 @@ class CPU:
 
         if (F == 0x0): # Clear screen
              
-            print('Clear screen 00E0')
-            self.renderer.clear()
-            return
+            if (NN == 0xe0):
+                print('Clear screen 00E0')
+                self.renderer.clear()
+                return
+            if (NN == 0xee):
+                print('Return from subroutine')
+                self.pc = self.stack.pop()
+                return
 
-        if (F == 0x1) : # Jump to address NNN 
+        if (F == 0x1): # Jump to address NNN 
             print(f'Jump to address {NNN} 1NNN')
             self.pc = NNN 
             return
+        
+        if (F == 0x2): 
+            print(f'Call subroutine at {NNN}')
+            self.stack.append(self.pc)
+            self.pc = NNN
+            return 
+    
+        if (F == 0x3):
+            print(f'Skip instruction if VX == NN')
+            if (self.v[X] == NN):
+                self.pc += 2
+            return
 
+        if (F == 0x4):
+            print(f'Skip instruction if VX != NN')
+            if (self.v[X] != NN):
+                self.pc += 2 
+            return 
+    
+        if (F == 0x5):
+            print(f'Skip instruction if VX == VY')
+            if (self.v[X] == self.v[Y]):
+                self.pc += 2 
+            return 
+    
+        if (F == 0x9):
+            print(f'Skip instruction if VX != VY')
+            if (self.v[X] != self.v[Y]):
+                self.pc += 2
+            return 
 
-        if (F == 0x6) :
+        if (F == 0x6) : 
             print(f'Set register V{X} to {NN} 6XNN')
             self.v[X] = NN
             return
@@ -132,14 +163,47 @@ class CPU:
             self.v[X] += NN
             return
         
+        if (F == 0x8):
+            if (N == 0x0):
+                self.v[X] = self.v[Y]
+                return 
+
+            if (N == 0x1):
+                self.v[X] = self.v[X] | self.v[Y]
+                return 
+            
+            if (N == 0x2):
+                self.v[X] = self.v[X] & self.v[Y]
+                return 
+        
+            if (N == 0x3):
+                self.v[X] = self.v[X] ^ self.v[Y]
+                return 
+        
+            if (N == 0x4):
+                
+                self.v[X] += self.v[Y]
+
+                self.v[0xf] = 0
+                
+                if self.v[X] > 0xff:
+                    self.v[0xf] = 1
+
+                self.v[X] = self.v[X] & 0xff
+
+                return 
+            
+            
+
+
+
         if (F == 0xa) :
             print(f'Set index register to {NNN} ANNN')
             self.i = NNN
             return
 
         if (F == 0xd) :
-            print(f'Draw to coordinates {self.v[X]} and {self.v[Y]} the value {N} DXYN')
-            # self.renderer.setPixel(self.v[X],self.v[Y])
+            print(f'Drawn instruction handled')
             width = 8 
             height = (opcode & 0xf)
 
@@ -157,6 +221,8 @@ class CPU:
 
                     sprite <<= 1
             return
+        
+
         else:
             print(f'Instruction not handled yet')
             return

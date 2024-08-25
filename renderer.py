@@ -14,7 +14,7 @@ class Renderer:
         self.game = game 
 
         self.display_buffer = [0] * (self.cols * self.rows)
-
+    
 
     def setPixel(self,x,y):
 
