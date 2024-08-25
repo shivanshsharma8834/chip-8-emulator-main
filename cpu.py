@@ -1,5 +1,6 @@
 import binascii
 import math
+import random
 
 class CPU:
 
@@ -246,6 +247,20 @@ class CPU:
             print(f'Set index register to {NNN} ANNN')
             self.i = NNN
             return
+
+        if F == 0xb:
+
+            self.pc = NNN + self.v[0]
+
+            return 
+        
+        if F == 0xc:
+
+            randnum = random.randint(0, 255)
+            self.v[X] = randnum & 0xff
+
+            return 
+
 
         if (F == 0xd) :
             print(f'Drawn instruction handled')
