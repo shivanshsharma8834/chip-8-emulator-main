@@ -193,6 +193,51 @@ class CPU:
 
                 return 
             
+            if (N == 0x5):
+
+                self.v[0xf] = 0
+
+                if self.v[X] > self.v[Y]:
+
+                    self.v[0xf] = 1
+
+                self.v[X] -= self.v[Y]
+
+                return  
+            
+            if N == 0x6:
+
+                self.v[0xf] = self.v[X] & 0x1
+
+                self.v[X] >>= 1
+
+                return 
+            
+            if N == 0x7:
+
+                self.v[0xf] = 0
+
+                if self.v[X] > self.v[Y]:
+
+                    self.v[0xf] = 1
+
+                self.v[X] = self.v[Y] - self.v[X]
+
+                return  
+
+            if N == 0xe:
+
+                self.v[0xf] = self.v[X] & 0x80
+
+                self.v[X] <<= 1
+
+                return 
+
+            
+
+
+
+            
             
 
 
