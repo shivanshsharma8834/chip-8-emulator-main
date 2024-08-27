@@ -1,24 +1,26 @@
+import pygame as pg
+
 class Keyboard:
 
     def __init__(self) -> None:
         
         self.keymap = {
-            49: 0x1,
-            50: 0x2, 
-            51: 0x3,
-            52: 0xc,
-            81: 0x4, 
-            87: 0x5, 
-            69: 0x6, 
-            82: 0xD, 
-            65: 0x7, 
-            83: 0x8, 
-            68: 0x9, 
-            70: 0xE, 
-            90: 0xA, 
-            88: 0x0, 
-            67: 0xB,
-            86: 0xF  
+            pg.K_1: 0x1,
+            pg.K_2: 0x2, 
+            pg.K_3: 0x3,
+            pg.K_4: 0xc,
+            pg.K_q: 0x4, 
+            pg.K_w: 0x5, 
+            pg.K_e: 0x6, 
+            pg.K_r: 0xD, 
+            pg.K_a: 0x7, 
+            pg.K_s: 0x8, 
+            pg.K_d: 0x9, 
+            pg.K_f: 0xE, 
+            pg.K_z: 0xA, 
+            pg.K_x: 0x0, 
+            pg.K_c: 0xB,
+            pg.K_v: 0xF  
         }
 
         self.keys_pressed = []
@@ -28,10 +30,14 @@ class Keyboard:
 
     def is_key_pressed(self,keycode):
 
-        return self.keys_pressed[keycode]
+        return keycode in self.keys_pressed
 
     def on_key_down(self,event):
 
-        key =  self.keymap[event.which]
+        pass
+    
+    def on_key_up(self, event):
+
+        pass 
 
         

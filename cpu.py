@@ -4,12 +4,9 @@ import random
 
 class CPU:
 
-    def __init__(self, game, renderer, keyboard = None, speaker = None) -> None:
+    def __init__(self, game) -> None:
         
-        self.game = game 
-        self.renderer = renderer
-        self.keyboard = keyboard
-        self.speaker = speaker 
+        self.game = game
 
         self.memory = [0] * 4096
 
@@ -90,7 +87,7 @@ class CPU:
 
                 
 
-        self.renderer.render()
+        self.game.renderer.render()
 
 
     def execute_instruction(self,opcode): 
@@ -112,7 +109,7 @@ class CPU:
              
             if (NN == 0xe0):
                 print('Clear screen 00E0')
-                self.renderer.clear()
+                self.game.renderer.clear()
                 return
             if (NN == 0xee):
                 print('Return from subroutine')
@@ -234,15 +231,6 @@ class CPU:
 
                 return 
 
-            
-
-
-
-            
-            
-
-
-
         if (F == 0xa) :
             print(f'Set index register to {NNN} ANNN')
             self.i = NNN
@@ -276,11 +264,92 @@ class CPU:
 
                     if ((sprite & 0x80) > 0):
 
-                        if ((self.renderer.setPixel(self.v[X] + col, self.v[Y] + row))):
+                        if ((self.game.renderer.setPixel(self.v[X] + col, self.v[Y] + row))):
                             self.v[0xf] = 1
 
                     sprite <<= 1
             return
+        
+        if F == 0xe:
+
+            if NN == 0x9e:
+
+                if self.keyboard.is_key_pressed(self.v[X]):
+
+                    self.pc += 2 
+
+                    return 
+                
+                
+            if NN == 0xa1:
+
+                if not(self.keyboard.is_key_pressed(self.v[X])):
+                
+                    self.pc += 2 
+
+                    return 
+
+        if F == 0xF:
+
+            if NN == 0x07:
+
+                self.v[X] = self.delayTimer
+
+                return 
+            
+            if NN == 0x15:
+
+                self.delayTimer = self.v[X]
+
+                return 
+            
+            if NN == 0x18:
+
+                self.soundTimer = self.v[X]
+
+                return 
+            
+            if NN == 0x1e:
+
+                self.i += self.v[X]
+
+                return 
+            
+            if NN == 0x29:
+
+                self.i = self.v[X] * 5; 
+                
+                return 
+            
+            if NN == 0x33:
+
+                self.memory[self.i] = self.v[X] // 100 
+
+                self.memory[self.i + 1] = (self.v[X] % 100) // 10
+
+                self.memory[self.i + 2] = self.v[X] % 10 
+
+                return 
+            
+
+            if NN == 0x55:
+
+                for registerIndex in range(0, X + 1):
+
+                    self.memory[self.i + registerIndex] = self.v[registerIndex]
+
+                return 
+            
+            if NN == 0x65:
+
+                for registerIndex in range(0, X + 1):
+
+                    self.v[registerIndex] = self.memory[self.i + registerIndex]
+
+                return 
+
+
+
         
 
         else:

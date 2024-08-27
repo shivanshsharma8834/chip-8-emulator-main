@@ -1,5 +1,7 @@
 import pygame as pg
 from renderer import Renderer
+from keyboard import Keyboard
+from speaker import Speaker
 from cpu import CPU
 
 
@@ -15,10 +17,9 @@ class Game:
     def setup_game(self):
 
         self.renderer = Renderer(self, 10)
-        self.renderer.test_render()
-
-        self.cpu = CPU(self,self.renderer)
-
+        self.keyboard = Keyboard()
+        self.speaker = Speaker()
+        self.cpu = CPU(self)
         self.cpu.load_rom('roms/IBM')
         self.cpu.load_sprites_in_memory()
         print(self.cpu.memory)
