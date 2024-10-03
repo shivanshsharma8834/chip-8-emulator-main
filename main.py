@@ -22,7 +22,7 @@ class Game:
         self.cpu = CPU(self)
         self.cpu.load_rom('roms/IBM')
         self.cpu.load_sprites_in_memory()
-        print(self.cpu.memory)
+        # print(self.cpu.memory)
 
     
        

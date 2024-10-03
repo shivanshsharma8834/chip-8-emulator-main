@@ -101,9 +101,11 @@ class CPU:
         NN = (opcode & 0x00ff)
         NNN = (opcode & 0x0fff)
 
-        print(f'Opcode is {opcode}')
-        print(f'Hex opcode is {hex(opcode)}')
-        print(f'X: {hex(X)}, Y: {hex(Y)}, N: {hex(N)}, NN: {hex(NN)}, NNN: {hex(NNN)}')
+        # print(f'Opcode is {opcode}')
+        # print(f'Hex opcode is {hex(opcode)}')
+        # print(f'X: {hex(X)}, Y: {hex(Y)}, N: {hex(N)}, NN: {hex(NN)}, NNN: {hex(NNN)}')
+
+        print(self.game.keyboard.keys_pressed)
 
         if (F == 0x0): # Clear screen
              
@@ -158,7 +160,7 @@ class CPU:
         
         if (F == 0x7) :
             print(f'Add register V{X} the value {NN} 7XNN')
-            self.v[X] += NN
+            self.v[X] = (self.v[X] + NN) % 256
             return
         
         if (F == 0x8):
@@ -225,9 +227,8 @@ class CPU:
 
             if N == 0xe:
 
-                self.v[0xf] = self.v[X] & 0x80
-
-                self.v[X] <<= 1
+                self.v[0xf] = (self.v[X] & 0x80) >> 7
+                self.v[X] = (self.v[X] << 1) % 256
 
                 return 
 
@@ -244,8 +245,7 @@ class CPU:
         
         if F == 0xc:
 
-            randnum = random.randint(0, 255)
-            self.v[X] = randnum & 0xff
+            self.v[X] = random.randint(0, 255) & NN
 
             return 
 
@@ -290,6 +290,21 @@ class CPU:
                     return 
 
         if F == 0xF:
+
+            if NN == 0x0A:
+
+                is_key_pressed = True 
+                while is_key_pressed:
+                    self.game.keyboard.event_handler()
+
+                    for i, k in enumerate(self.game.keyboard.keys_pressed):
+                        if k:
+                            self.v[X] = i
+                            is_key_pressed = False
+                            break
+                
+                return
+
 
             if NN == 0x07:
 
@@ -347,10 +362,6 @@ class CPU:
                     self.v[registerIndex] = self.memory[self.i + registerIndex]
 
                 return 
-
-
-
-        
 
         else:
             print(f'Instruction not handled yet')

@@ -57,14 +57,6 @@ class Renderer:
             if (self.display_buffer[i]):
 
                 pg.draw.rect(self.game.display, "black", (x,y, self.scale, self.scale))
-
-    def test_render(self):
-
-        self.setPixel(0,0)
-        self.setPixel(5,5)
-        self.setPixel(10,10)
-        self.setPixel(64,32)
-
             
 
 
