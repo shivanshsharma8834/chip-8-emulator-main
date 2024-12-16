@@ -55,7 +55,7 @@ class Keyboard:
 
         for event in pg.event.get():
 
-            match event.type:
+            match event.type:   
 
                 case pg.QUIT:
                     sys.exit()
@@ -63,6 +63,7 @@ class Keyboard:
                 case pg.KEYDOWN:
 
                     self.on_key_down(event.key)
+                    print("Event key: ", event.key)
                 
                 case pg.KEYUP:
 

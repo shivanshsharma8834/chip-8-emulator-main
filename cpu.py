@@ -2,6 +2,9 @@ import binascii
 import math
 import random
 
+USE_ORIGINAL_8XY6 = False
+
+
 class CPU:
 
     def __init__(self, game) -> None:
@@ -75,11 +78,7 @@ class CPU:
 
             if not(self.paused):
 
-                print(f'Program counter {self.pc}')
-                print(f'Current memory = {self.memory[self.pc]}')
-
-                
-                opcode = (self.memory[self.pc] << 8) | self.memory[self.pc + 1] # Opcode is made by attaching two instructions together.
+                opcode = (self.memory[self.pc] << 8) | self.memory[self.pc + 1] # Opcode is made by ORing two instructions together.
                 
 
                 self.execute_instruction(opcode)
@@ -101,139 +100,141 @@ class CPU:
         NN = (opcode & 0x00ff)
         NNN = (opcode & 0x0fff)
 
-        # print(f'Opcode is {opcode}')
-        # print(f'Hex opcode is {hex(opcode)}')
-        # print(f'X: {hex(X)}, Y: {hex(Y)}, N: {hex(N)}, NN: {hex(NN)}, NNN: {hex(NNN)}')
+        print(f"Opcode is: {hex(opcode)}")
 
-        print(self.game.keyboard.keys_pressed)
-
-        if (F == 0x0): # Clear screen
+        if F == 0x0: 
              
-            if (NN == 0xe0):
-                print('Clear screen 00E0')
+            if NN == 0xe0: # Clear screen
                 self.game.renderer.clear()
                 return
-            if (NN == 0xee):
-                print('Return from subroutine')
+            if NN == 0xee: # Return from subroutine
                 self.pc = self.stack.pop()
                 return
 
-        if (F == 0x1): # Jump to address NNN 
-            print(f'Jump to address {NNN} 1NNN')
+        if F == 0x1: # Jump to address NNN 
             self.pc = NNN 
             return
         
-        if (F == 0x2): 
-            print(f'Call subroutine at {NNN}')
+        if F == 0x2: # Call subroutine at address NNN
             self.stack.append(self.pc)
             self.pc = NNN
             return 
     
-        if (F == 0x3):
-            print(f'Skip instruction if VX == NN')
-            if (self.v[X] == NN):
+        if F == 0x3: # Skip if VX == NN
+            if self.v[X] == NN:
                 self.pc += 2
             return
 
-        if (F == 0x4):
-            print(f'Skip instruction if VX != NN')
-            if (self.v[X] != NN):
+        if F == 0x4: 
+            if self.v[X] != NN:
                 self.pc += 2 
             return 
     
-        if (F == 0x5):
-            print(f'Skip instruction if VX == VY')
-            if (self.v[X] == self.v[Y]):
+        if F == 0x5:
+            if self.v[X] == self.v[Y]:
                 self.pc += 2 
             return 
     
-        if (F == 0x9):
-            print(f'Skip instruction if VX != VY')
-            if (self.v[X] != self.v[Y]):
+        if F == 0x9:
+            if self.v[X] != self.v[Y]:
                 self.pc += 2
             return 
 
-        if (F == 0x6) : 
-            print(f'Set register V{X} to {NN} 6XNN')
+        if F == 0x6: 
             self.v[X] = NN
             return
         
-        if (F == 0x7) :
-            print(f'Add register V{X} the value {NN} 7XNN')
+        if F == 0x7:
             self.v[X] = (self.v[X] + NN) % 256
             return
         
-        if (F == 0x8):
-            if (N == 0x0):
+        if F == 0x8:
+            if N == 0x0:
                 self.v[X] = self.v[Y]
                 return 
 
-            if (N == 0x1):
+            if N == 0x1:
                 self.v[X] = self.v[X] | self.v[Y]
                 return 
             
-            if (N == 0x2):
+            if N == 0x2:
                 self.v[X] = self.v[X] & self.v[Y]
                 return 
         
-            if (N == 0x3):
+            if N == 0x3:
                 self.v[X] = self.v[X] ^ self.v[Y]
                 return 
         
-            if (N == 0x4):
-                
-                self.v[X] += self.v[Y]
+            if N == 0x4:
+            
+                result = self.v[X] + self.v[Y]
 
-                self.v[0xf] = 0
-                
-                if self.v[X] > 0xff:
-                    self.v[0xf] = 1
+                if result > 255:
+                    self.v[0xf] = 1 
+                else:
+                    self.v[0xf] = 0 
 
-                self.v[X] = self.v[X] & 0xff
+                self.v[X] = result & 0xff
 
                 return 
             
-            if (N == 0x5):
+            if N == 0x5:
 
-                self.v[0xf] = 0
+                result = self.v[X] - self.v[Y]
 
-                if self.v[X] > self.v[Y]:
+                if self.v[X] < self.v[Y]:
+
+                    self.v[0xf] = 0
+                
+                else:
 
                     self.v[0xf] = 1
 
-                self.v[X] -= self.v[Y]
+                self.v[X] = result & 0xff
 
                 return  
             
             if N == 0x6:
 
-                self.v[0xf] = self.v[X] & 0x1
+                if USE_ORIGINAL_8XY6:
 
-                self.v[X] >>= 1
+                    self.v[0xf] = self.v[Y] & 0x1 
+
+                    self.v[X] = self.v[Y] >> 1 
+                
+                else:
+
+                    self.v[0xf] = self.v[X] & 0x1 
+
+                    self.v[X] = self.v[X] >> 1 
 
                 return 
             
             if N == 0x7:
 
-                self.v[0xf] = 0
+                result = self.v[Y] - self.v[X]
 
-                if self.v[X] > self.v[Y]:
+                if self.v[Y] < self.v[X]:
 
-                    self.v[0xf] = 1
+                    self.v[0xf] = 0 
+                
+                else:
 
-                self.v[X] = self.v[Y] - self.v[X]
+                    self.v[0xf] = 1 
 
+                self.v[X] = result & 0xff
                 return  
 
             if N == 0xe:
 
                 self.v[0xf] = (self.v[X] & 0x80) >> 7
-                self.v[X] = (self.v[X] << 1) % 256
+                self.v[X] = self.v[X] << 1 
+
+                self.v[X] = self.v[X] & 0xff
 
                 return 
 
-        if (F == 0xa) :
-            print(f'Set index register to {NNN} ANNN')
+        if F == 0xa:
             self.i = NNN
             return
 
@@ -250,8 +251,7 @@ class CPU:
             return 
 
 
-        if (F == 0xd) :
-            print(f'Drawn instruction handled')
+        if F == 0xd:
             width = 8 
             height = (opcode & 0xf)
 
@@ -269,23 +269,23 @@ class CPU:
 
                     sprite <<= 1
             return
-        
+
         if F == 0xe:
 
             if NN == 0x9e:
 
-                if self.keyboard.is_key_pressed(self.v[X]):
+                if self.game.keyboard.is_key_pressed(self.v[X]):
 
-                    self.pc += 2 
+                    self.pc -= 2 
 
                     return 
                 
                 
             if NN == 0xa1:
 
-                if not(self.keyboard.is_key_pressed(self.v[X])):
+                if not(self.game.keyboard.is_key_pressed(self.v[X])):
                 
-                    self.pc += 2 
+                    self.pc -= 2 
 
                     return 
 
@@ -299,7 +299,7 @@ class CPU:
 
                     for i, k in enumerate(self.game.keyboard.keys_pressed):
                         if k:
-                            self.v[X] = i
+                            self.v[X] = hex(i)
                             is_key_pressed = False
                             break
                 
@@ -366,6 +366,8 @@ class CPU:
         else:
             print(f'Instruction not handled yet')
             return
+        
+        
 
 
 

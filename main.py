@@ -12,20 +12,17 @@ class Game:
         self.display = pg.display.set_mode((640,320))
         self.clock = pg.time.Clock()
         self.running = False 
-        self.framerate = 5
+        self.framerate = 60
 
     def setup_game(self):
 
-        self.renderer = Renderer(self, 10)
+        self.renderer = Renderer(self, scale=10)
         self.keyboard = Keyboard()
         self.speaker = Speaker()
         self.cpu = CPU(self)
-        self.cpu.load_rom('roms/IBM')
+        self.cpu.load_rom('roms/4-flags.ch8')
         self.cpu.load_sprites_in_memory()
-        # print(self.cpu.memory)
-
-    
-       
+     
 
     def run_game(self):
 

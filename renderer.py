@@ -7,7 +7,7 @@ class Renderer:
     def __init__(self, game, scale) -> None:
         
         self.cols = 64 
-        self.rows = 32 
+        self.rows = 32
 
         self.scale = scale 
 
@@ -20,26 +20,29 @@ class Renderer:
 
         if (x >= self.cols):
 
-            x -= self.cols 
+            x -= self.cols
 
-        elif (x < 0):
+        elif (x <= 0):
 
             x += self.cols
 
         if (y >= self.rows):
 
-            x -= self.rows 
+            x -= self.rows
         
-        elif (y < 0):
+        elif (y <= 0):
 
-            y += self.rows 
+            y += self.rows
 
 
         pixel_loc = x + (y * self.cols)
 
+        print("Pixel loc: ", pixel_loc)
+
+        # if pixel_loc < 2048:
         self.display_buffer[pixel_loc] ^= 1 
 
-        return not(self.display_buffer[pixel_loc]);
+        return not(self.display_buffer[pixel_loc])
 
     def clear(self):
 
