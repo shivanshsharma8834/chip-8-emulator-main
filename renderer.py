@@ -39,10 +39,10 @@ class Renderer:
 
         print("Pixel loc: ", pixel_loc)
 
-        # if pixel_loc < 2048:
-        self.display_buffer[pixel_loc] ^= 1 
+        if pixel_loc < 2048:
+            self.display_buffer[pixel_loc] ^= 1 
 
-        return not(self.display_buffer[pixel_loc])
+            return not(self.display_buffer[pixel_loc])
 
     def clear(self):
 

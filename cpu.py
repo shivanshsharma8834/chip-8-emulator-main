@@ -91,336 +91,414 @@ class CPU:
     def execute_instruction(self,opcode): 
 
         self.pc += 2
-        
-        F = (opcode & 0xf000) >> 12
-        X = (opcode & 0x0f00) >> 8
-        Y = (opcode & 0x00f0) >> 4
-        N = (opcode & 0x000f) 
-        NN = (opcode & 0x00ff)
-        NNN = (opcode & 0x0fff)
 
-        # print(f"Opcode is: {hex(opcode)}")
-
-        if F == 0x0: 
+        if opcode & 0xffff == 0x00e0: # Clear screen 
              
-            if NN == 0xe0: # Clear screen
-                self.game.renderer.clear()
-                return
-            if NN == 0xee: # Return from subroutine
-                self.pc = self.stack.pop()
-                return
+            self.game.renderer.clear()
+            
+        elif opcode & 0xffff == 0x00ee: # Return from subroutine
 
-        if F == 0x1: # Jump to address NNN 
-            self.pc = NNN 
-            return
+            self.pc = self.stack.pop()
+
+        elif opcode & 0xf000 == 0x1000: # Jump to address
+
+            address = opcode & 0x0fff
+            self.pc = address
         
-        if F == 0x2: # Call subroutine at address NNN
+        elif opcode & 0xf000 == 0x2000: # Call subroutine
+
+            address = opcode & 0x0fff
             self.stack.append(self.pc)
-            self.pc = NNN
-            return 
-    
-        if F == 0x3: # Skip if VX == NN
-            if self.v[X] == NN:
-                self.pc += 2
-            return
+            self.pc = address
 
-        if F == 0x4: 
-            if self.v[X] != NN:
+        elif opcode & 0xf000 == 0x3000: # Skip if v[x] == kk 
+
+            x = (opcode & 0x0f00) >> 8 
+
+            kk = opcode & 0x00ff 
+
+            if self.v[x] == kk:
+
                 self.pc += 2 
-            return 
-    
-        if F == 0x5:
-            if self.v[X] == self.v[Y]:
+         
+        elif opcode & 0xf000 == 0x4000: # Skip if v[x] != kk
+
+            x = (opcode & 0x0f00) >> 8 
+
+            kk = opcode & 0x00ff 
+
+            if self.v[x] != kk:
+
                 self.pc += 2 
-            return 
-    
-        if F == 0x9:
-            if self.v[X] != self.v[Y]:
-                self.pc += 2
-            return 
-
-        if F == 0x6: 
-            self.v[X] = NN
-            return
         
-        if F == 0x7:
-            self.v[X] = (self.v[X] + NN) % 256
-            return
-        
-        if F == 0x8:
-            if N == 0x0:
-                self.v[X] = self.v[Y]
-                return 
+        elif opcode & 0xf00f == 0x5000: # Skip if v[x] == v[y]
 
-            if N == 0x1:
-                self.v[X] = self.v[X] | self.v[Y]
-                return 
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
+
+            if self.v[x] == self.v[y]:
+
+                self.pc += 2 
+
+        elif opcode & 0xf000 == 0x6000: # Set v[x] == kk
+
+            x = (opcode & 0x0f00) >> 8 
+            kk = opcode & 0x00ff 
+
+            self.v[x] = kk
+
+        elif opcode & 0xf000 == 0x7000: # Add value kk to v[x]
+
+            x = (opcode & 0x0f00) >> 8 
+            kk = opcode & 0x00ff
+
+            self.v[x] = (self.v[x] + kk) & 0xff
+
+        elif opcode & 0xf00f == 0x8000: # Set v[x] = v[y]
+
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4 
+
+            self.v[x] = self.v[y]
+
+        elif opcode & 0xf00f == 0x8001: # Bitwise OR v[x] and v[y]
+
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
+
+            self.v[x] |= self.v[y]
+
+            self.v[0xf] = 0 
+
+        elif opcode & 0xf00f == 0x8002: # Bitwise AND v[x] and v[y]
+
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
+
+            self.v[x] &= self.v[y]
+
+            self.v[0xf] = 0
             
-            if N == 0x2:
-                self.v[X] = self.v[X] & self.v[Y]
-                return 
-        
-            if N == 0x3:
-                self.v[X] = self.v[X] ^ self.v[Y]
-                return 
-        
-            if N == 0x4:
-            
-                result = self.v[X] + self.v[Y]
+        elif opcode & 0xf00f == 0x8003: # Bitwise XOR v[x] and v[y]
 
-                if result > 255:
-                    self.v[0xf] = 1 
-                else:
-                    self.v[0xf] = 0 
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
 
-                self.v[X] = result & 0xff
-
-                return 
-            
-            if N == 0x5:
-
-                result = self.v[X] - self.v[Y]
-
-                if self.v[X] < self.v[Y]:
-
-                    self.v[0xf] = 0
-                
-                else:
-
-                    self.v[0xf] = 1
-
-                self.v[X] = result & 0xff
-
-                return  
-            
-            if N == 0x6:
-
-                if USE_ORIGINAL_8XY6:
-
-                    self.v[0xf] = self.v[Y] & 0x1 
-
-                    self.v[X] = self.v[Y] >> 1 
-                
-                else:
-
-                    self.v[0xf] = self.v[X] & 0x1 
-
-                    self.v[X] = self.v[X] >> 1 
-
-                return 
-            
-            if N == 0x7:
-
-                result = self.v[Y] - self.v[X]
-
-                if self.v[Y] < self.v[X]:
-
-                    self.v[0xf] = 0 
-                
-                else:
-
-                    self.v[0xf] = 1 
-
-                self.v[X] = result & 0xff
-                return  
-
-            if N == 0xe:
-
-                self.v[0xf] = (self.v[X] & 0x80) >> 7
-                self.v[X] = self.v[X] << 1 
-
-                self.v[X] = self.v[X] & 0xff
-
-                return 
-
-        if F == 0xa:
-            self.i = NNN
-            return
-
-        if F == 0xb:
-
-            self.pc = NNN + self.v[0]
-
-            return 
-        
-        if F == 0xc:
-
-            self.v[X] = random.randint(0, 255) & NN
-
-            return 
-
-
-        if F == 0xd:
-            width = 8 
-            height = (opcode & 0xf)
+            self.v[x] ^= self.v[y]
 
             self.v[0xf] = 0
 
-            for row in range(0, height):
-                sprite = self.memory[self.i + row]
+        elif opcode & 0xf00f == 0x8004: # Add v[y] to v[x] with overflow
 
-                for col in range(0,width):
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
 
-                    if ((sprite & 0x80) > 0):
+            self.v[x] += self.v[y]
 
-                        if ((self.game.renderer.setPixel(self.v[X] + col, self.v[Y] + row))):
-                            self.v[0xf] = 1
+            if self.v[x] > 0xff:
 
-                    sprite <<= 1
-            return
+                self.v[0xf] = 1 
+                self.v[x] &= 0xff 
 
-        # if F == 0xe:
+            else:
 
-        #     if NN == 0x9e:
+                self.v[0xf] = 0
 
-        #         if self.game.keyboard.is_key_pressed(self.v[X]):
+        elif opcode & 0xf00f == 0x8005: # Sub v[y] from v[x] with underflow
 
-        #             self.pc += 2 
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
 
-        #             return 
+            vx = self.v[x]
+            vy = self.v[y]
+
+            self.v[x] = (vx - vy) & 0xff 
+
+            if vx >= vy:
+
+                self.v[0xf] = 1 
+
+            else:
+
+                self.v[0xf] = 0 
+        
+        elif opcode & 0xf00f == 0x8006: # Shift right
+
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
+
+            self.v[0xf] = self.v[y] & 0x1 
+
+            self.v[x] = (self.v[y] >> 1) & 0xff
+
+        elif opcode & 0xf00f == 0x8007: # Subtract v[x] from v[y] and store in v[x] 
+
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
+
+            self.v[x] = (self.v[y] - self.v[x]) & 0xff 
+
+            if self.v[y] > self.v[x]:
+
+                self.v[0xf] = 1
+
+            else:
                 
-                
-        #     if NN == 0xa1:
+                self.v[0xf] = 0
 
-        #         if not(self.game.keyboard.is_key_pressed(self.v[X])):
-                
-        #             self.pc += 2 
+        elif opcode & 0xf00f == 0x800e: # Shift to the left 
 
-        #             return 
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4
 
-        if opcode & 0xf0ff == 0xe09e:
+            self.v[0xf] = (self.v[y] & 0x80) >> 7 
+
+            self.v[x] = (self.v[y] << 1) & 0xff
 
 
-            # if self.game.keyboard.is_key_pressed(key):
 
-            #     self.pc += 2 
-            #     print(f'Key pressed {key}')
+        elif opcode & 0xf00f == 0x9000: # Skip if v[x] != v[y]
 
-            key = self.v[X]
+            x = (opcode & 0x0f00) >> 8 
+            y = (opcode & 0x00f0) >> 4 
+
+            if self.v[x] != self.v[y]:
+
+                self.pc += 2
+        
+        elif opcode & 0xf000 == 0xa000: # Set index register to nnn
+
+            address = opcode & 0x0fff 
+
+            self.i = address
+
+        elif opcode & 0xf000 == 0xb000: # Jump to address with offset v[0]
+
+            address = opcode & 0x0fff 
+
+            self.pc = address + self.v[0]
+
+        elif opcode & 0xf000 == 0xc000: # Set v[x] to random number 
+
+            x = (opcode & 0x0f00) >> 8 
+            kk = opcode & 0x00ff 
+
+            random_num = (random.randint(0, 255)) & kk
+
+            self.v[x] = random_num
+
+        elif opcode & 0xf000 == 0xd000: # Draw instruction
+
+            x = self.v[(opcode & 0x0f00) >> 8] 
+            y = self.v[(opcode & 0x00f0) >> 4]
+
+            self.v[0xf] = 0
+
+            n = opcode & 0x000f
+
+            # width = 8 
+            # height = (opcode & 0xf)
+
+            # for row in range(0, height):
+            #     sprite = self.memory[self.i + row]
+
+            #     for col in range(0,width):
+
+            #         if ((sprite & 0x80) > 0):
+
+            #             if ((self.game.renderer.setPixel(self.v[x] + col, self.v[y] + row))):
+            #                 self.v[0xf] = 1
+
+            #         sprite <<= 1
+
+            for row in range(n):
+
+                sprite_row = self.memory[self.i + row]
+
+                for bit in range(8):
+
+                    pixel = (sprite_row >> (7 - bit)) & 0x01
+
+                    screen_x = (x + bit) % 64 
+                    screen_y = (y + row) % 32 
+
+                    if pixel:
+
+                        self.game.renderer.setPixel(screen_x, screen_y)
+
+
+
+
+        elif opcode & 0xf0ff == 0xe09e: 
+
+            x = (opcode & 0x0f00) >> 8
+
+            key = self.v[x]
 
             keys = pg.key.get_pressed()
 
-            corrensponding_pg_key = None 
+            corresponding_pg_key = None 
 
             for pg_key, chip8_key in self.game.keyboard.key_map.items():
 
                 if chip8_key == key:
 
-                    corrensponding_pg_key = pg_key
+                    corresponding_pg_key = pg_key
                     
                     break
             
-            if corrensponding_pg_key and keys[corrensponding_pg_key]:
+            if corresponding_pg_key and keys[corresponding_pg_key]:
 
                 self.pc += 2 
 
             return 
             
-        if opcode & 0xf0ff == 0xe0a1:
+        elif opcode & 0xf0ff == 0xe0a1:
 
+            x = (opcode & 0x0f00) >> 8
 
-            # if not(self.game.keyboard.is_key_pressed(key)):
-
-            #     self.pc += 2 
-            #     print(f'Key pressed {key}')
-
-            key = self.v[X]
+            key = self.v[x]
 
             keys = pg.key.get_pressed()
 
-            corrensponding_pg_key = None 
+            corresponding_pg_key = None 
 
             for pg_key, chip8_key in self.game.keyboard.key_map.items():
 
                 if chip8_key == key:
 
-                    corrensponding_pg_key = pg_key
+                    corresponding_pg_key = pg_key
                     
                     break
             
-            if not corrensponding_pg_key or not keys[corrensponding_pg_key]:
+            if not corresponding_pg_key or not keys[corresponding_pg_key]:
 
                 self.pc += 2 
 
             return 
+        
+        elif opcode & 0xf0ff == 0xf007:
 
-        if F == 0xF:
+            x = (opcode & 0x0f00) >> 8
 
-            if NN == 0x0A:
+            self.v[x] = self.delayTimer
+        
+        elif opcode & 0xf0ff == 0xf00a:
 
-                is_key_pressed = True 
-                while is_key_pressed:
-                    self.game.keyboard.event_handler()
+            x = (opcode & 0x0f00) >> 8
 
-                    for i, k in enumerate(self.game.keyboard.keys_pressed):
-                        if k:
-                            self.v[X] = hex(i)
-                            is_key_pressed = False
-                            break
-                
-                return
+            keys = pg.key.get_pressed()
 
+            key_pressed = False
 
-            if NN == 0x07:
+            for pg_key, chip8_key in self.game.keyboard.key_map.items():
 
-                self.v[X] = self.delayTimer
+                if keys[pg_key]:
 
-                return 
+                    self.v[x] = chip8_key
+
+                    key_pressed = True 
+
+                    break
+
+            if key_pressed:
+
+                waiting_for_release = True
+
+                while waiting_for_release:
+
+                    for event in pg.event.get():
+
+                        if event.type == pg.KEYUP:
+
+                            waiting_for_release = False
+
+            else:
+
+                self.pc -= 2  
             
-            if NN == 0x15:
+        elif opcode & 0xf0ff == 0xf015:
 
-                self.delayTimer = self.v[X]
+            x = (opcode & 0x0f00) >> 8
 
-                return 
-            
-            if NN == 0x18:
+            self.delayTimer = self.v[x]
 
-                self.soundTimer = self.v[X]
+        elif opcode & 0xf0ff == 0xf018:
 
-                return 
-            
-            if NN == 0x1e:
+            x = (opcode & 0x0f00) >> 8
 
-                self.i += self.v[X]
+            self.soundTimer = v[x]
 
-                return 
-            
-            if NN == 0x29:
+        elif opcode & 0xf0ff == 0xf01e:
 
-                self.i = self.v[X] * 5; 
-                
-                return 
-            
-            if NN == 0x33:
+            x = (opcode & 0x0f00) >> 8
 
-                self.memory[self.i] = self.v[X] // 100 
+            self.i += self.v[x]
 
-                self.memory[self.i + 1] = (self.v[X] % 100) // 10
+        elif opcode & 0xf0ff == 0xf029:
 
-                self.memory[self.i + 2] = self.v[X] % 10 
+            x = (opcode & 0x0f00) >> 8
 
-                return 
-            
+            self.i = 0x50 + (self.v[x] * 5)
 
-            if NN == 0x55:
+        elif opcode & 0xf0ff == 0xf033:
 
-                for registerIndex in range(0, X + 1):
+            x = (opcode & 0x0f00) >> 8
 
-                    self.memory[self.i + registerIndex] = self.v[registerIndex]
+            val = self.v[x]
 
-                return 
-            
-            if NN == 0x65:
+            hundreds = val // 100
 
-                for registerIndex in range(0, X + 1):
+            tens = (val // 10) % 10 
 
-                    self.v[registerIndex] = self.memory[self.i + registerIndex]
+            ones = val % 10 
 
-                return 
+            self.memory[self.i] = hundreds
+            self.memory[self.i + 1] = tens 
+            self.memory[self.i + 2] = ones
+
+        elif opcode & 0xf0ff == 0xf055:
+
+            x = (opcode & 0x0f00) >> 8
+
+            for i in range(x + 1):
+
+                val = self.v[i]
+
+                self.memory[self.i + i] = val 
+
+            self.i = self.i + x + 1 
+
+        elif opcode & 0xf0ff == 0xf065:
+
+            x = (opcode & 0x0f00) >> 8
+
+            for i in range(x + 1):
+
+                val = self.memory[self.i + i]
+
+                self.v[i] = val
+
+
+            self.i = self.i + x + 1        
 
         else:
             print(f'Instruction not handled yet, opcode: {hex(opcode)}')
-            return
+            
+        
+        if self.delayTimer > 0:
+
+            self.delayTimer -= 1 
+
+        if self.soundTimer > 0:
+
+            self.soundTimer -= 1
+
+            if self.soundTimer == 0:
+
+                print("Play beep")
+
+    
         
         
 

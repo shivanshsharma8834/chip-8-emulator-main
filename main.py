@@ -20,7 +20,7 @@ class Game:
         self.keyboard = Keyboard()
         self.speaker = Speaker()
         self.cpu = CPU(self)
-        self.cpu.load_rom('roms/4-flags.ch8')
+        self.cpu.load_rom('roms/BLINKY')
         self.cpu.load_sprites_in_memory()
      
 
