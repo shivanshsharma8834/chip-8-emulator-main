@@ -1,5 +1,4 @@
-import binascii
-import math
+import pygame as pg
 import random
 
 USE_ORIGINAL_8XY6 = False
@@ -100,7 +99,7 @@ class CPU:
         NN = (opcode & 0x00ff)
         NNN = (opcode & 0x0fff)
 
-        print(f"Opcode is: {hex(opcode)}")
+        # print(f"Opcode is: {hex(opcode)}")
 
         if F == 0x0: 
              
@@ -270,24 +269,80 @@ class CPU:
                     sprite <<= 1
             return
 
-        if F == 0xe:
+        # if F == 0xe:
 
-            if NN == 0x9e:
+        #     if NN == 0x9e:
 
-                if self.game.keyboard.is_key_pressed(self.v[X]):
+        #         if self.game.keyboard.is_key_pressed(self.v[X]):
 
-                    self.pc -= 2 
+        #             self.pc += 2 
 
-                    return 
+        #             return 
                 
                 
-            if NN == 0xa1:
+        #     if NN == 0xa1:
 
-                if not(self.game.keyboard.is_key_pressed(self.v[X])):
+        #         if not(self.game.keyboard.is_key_pressed(self.v[X])):
                 
-                    self.pc -= 2 
+        #             self.pc += 2 
 
-                    return 
+        #             return 
+
+        if opcode & 0xf0ff == 0xe09e:
+
+
+            # if self.game.keyboard.is_key_pressed(key):
+
+            #     self.pc += 2 
+            #     print(f'Key pressed {key}')
+
+            key = self.v[X]
+
+            keys = pg.key.get_pressed()
+
+            corrensponding_pg_key = None 
+
+            for pg_key, chip8_key in self.game.keyboard.key_map.items():
+
+                if chip8_key == key:
+
+                    corrensponding_pg_key = pg_key
+                    
+                    break
+            
+            if corrensponding_pg_key and keys[corrensponding_pg_key]:
+
+                self.pc += 2 
+
+            return 
+            
+        if opcode & 0xf0ff == 0xe0a1:
+
+
+            # if not(self.game.keyboard.is_key_pressed(key)):
+
+            #     self.pc += 2 
+            #     print(f'Key pressed {key}')
+
+            key = self.v[X]
+
+            keys = pg.key.get_pressed()
+
+            corrensponding_pg_key = None 
+
+            for pg_key, chip8_key in self.game.keyboard.key_map.items():
+
+                if chip8_key == key:
+
+                    corrensponding_pg_key = pg_key
+                    
+                    break
+            
+            if not corrensponding_pg_key or not keys[corrensponding_pg_key]:
+
+                self.pc += 2 
+
+            return 
 
         if F == 0xF:
 
@@ -364,7 +419,7 @@ class CPU:
                 return 
 
         else:
-            print(f'Instruction not handled yet')
+            print(f'Instruction not handled yet, opcode: {hex(opcode)}')
             return
         
         

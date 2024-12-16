@@ -6,22 +6,22 @@ class Keyboard:
     def __init__(self) -> None:
         
         self.key_map = {
-            49: 0x1,    #1
-            50: 0x2,    #2
-            51: 0x3,    #3
-            52: 0xc,    #4
-            113: 0x4,    #Q
-            119: 0x5,    #W
-            101: 0x6,    #E
-            114: 0xD,    #R
-            97: 0x7,    #A
-            115: 0x8,    #S
-            100: 0x9,    #D
-            102: 0xE,    #F
-            122: 0xA,    #Z
-            120: 0x0,    #X
-            99: 0xB,    #C
-            118: 0xF     #V
+            pg.K_1: 0x1,    #1
+            pg.K_2: 0x2,    #2
+            pg.K_3: 0x3,    #3
+            pg.K_4: 0xc,    #4
+            pg.K_q: 0x4,    #Q
+            pg.K_w: 0x5,    #W
+            pg.K_e: 0x6,    #E
+            pg.K_r: 0xD,    #R
+            pg.K_a: 0x7,    #A
+            pg.K_s: 0x8,    #S
+            pg.K_d: 0x9,    #D
+            pg.K_f: 0xE,    #F
+            pg.K_z: 0xA,    #Z
+            pg.K_x: 0x0,    #X
+            pg.K_c: 0xB,    #C
+            pg.K_v: 0xF     #V
         }
 
         self.keys_pressed = [False for i in range(16)]
